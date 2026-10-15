@@ -1,7 +1,6 @@
 from typing import Any
+
 from langchain.chat_models import ChatOpenAI
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from utils import messages_to_prompt
 
 
 class ChatGPT:

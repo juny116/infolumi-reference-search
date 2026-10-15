@@ -1,6 +1,6 @@
-from elasticsearch import Elasticsearch
 from typing import List
 
+from elasticsearch import Elasticsearch
 from langchain.schema import (
     AIMessage,
     BaseChatMessageHistory,
@@ -166,6 +166,12 @@ class ChatMessageHistoryWithLongTerm(ChatMessageHistoryWithContextWindow):
         messages = self.get_messages_with_long_term()
         return self._messages_to_prompt(messages)
 
+    def save_long_term(self):
+        return self._save_long_term()
+
+    def get_long_term(self, query):
+        return self._get_long_term(query)
+
     def _save_long_term(self) -> None:
         print("Saving long term")
         reversed_order = []
@@ -220,43 +226,3 @@ class ChatMessageHistoryWithLongTerm(ChatMessageHistoryWithContextWindow):
             return None
         else:
             return res["hits"]["hits"][0]["_source"]["log"]
-
-
-if __name__ == "__main__":
-    from time import sleep
-
-    es = Elasticsearch("localhost:9200")
-    index = "masteryoda"
-    es.indices.delete(index=index, ignore=[400, 404])
-    if es.indices.exists(index=index):
-        pass
-    else:
-        es.indices.create(index=index)
-    query = "dinner menus"
-    # req_body = {"query":{"match_all":{}}}
-    req_body = {
-        "query": {
-            "multi_match": {
-                "query": query,
-            }
-        }
-    }
-    doc = {"log": "I will have hamberger for dinner."}
-
-    temp = es.index(index=index, doc_type="_doc", body=doc, id=0)
-    sleep(1)
-
-    res = es.search(
-        search_type="dfs_query_then_fetch", index=index, body=req_body, size=5
-    )
-    print(res)
-    print(res["hits"]["hits"][0])
-    es.indices.delete(index=index, ignore=[400, 404])
-
-    # temp = SystemMessage(content="test", additional_kwargs={'token_length':1})
-    # history = ChatMessageHistoryWithContextWindow(temp)
-    # print(history.messages)
-    # print(history.get_system_message())
-    # temp2 = SystemMessage(content="test2", additional_kwargs={'token_length':2})
-    # history.set_system_message(temp2)
-    # print(history.get_system_message())
